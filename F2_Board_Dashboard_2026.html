@@ -1,0 +1,871 @@
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F2 Board Dashboard — Jan–May 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0f1c;
+    --card: #111827;
+    --card2: #1a2236;
+    --border: #1f2d45;
+    --indigo: #6366f1;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --purple: #a855f7;
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --muted2: #94a3b8;
+    --sidebar-w: 226px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    font-size: 17px;
+    line-height: 1.7;
+  }
+  /* SIDEBAR */
+  nav {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 28px 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .nav-logo h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .nav-logo p { font-size: 15px; color: var(--muted); margin-top: 3px; }
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    color: var(--muted2);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+  }
+  nav a:hover, nav a.active {
+    color: var(--text);
+    background: rgba(99,102,241,0.08);
+    border-left-color: var(--indigo);
+  }
+  nav a .nav-icon { font-size: 14px; width: 20px; text-align: center; }
+  .nav-footer {
+    margin-top: auto;
+    padding: 16px 20px 0;
+    border-top: 1px solid var(--border);
+    font-size: 15px;
+    color: var(--muted);
+  }
+  /* MAIN */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 40px 48px;
+    max-width: 1200px;
+  }
+  /* SECTIONS */
+  section { margin-bottom: 72px; scroll-margin-top: 24px; }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .section-header .section-icon { font-size: 20px; }
+  .section-subtitle {
+    font-size: 15px;
+    color: var(--muted2);
+    margin-bottom: 24px;
+    margin-top: -18px;
+    max-width: 720px;
+    line-height: 1.65;
+  }
+  /* STAT CARDS */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent, var(--indigo));
+  }
+  .stat-card .label { font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 8px; }
+  .stat-card .value { font-size: 32px; font-weight: 800; letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+  .stat-card .sublabel { font-size: 14px; color: var(--muted2); }
+  .stat-card .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-top: 8px; }
+  .badge-green { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .badge-blue  { background: rgba(59,130,246,0.15);  color: var(--blue); }
+  /* CHARTS */
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .chart-card .chart-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+  .chart-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .chart-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  canvas { max-height: 220px; }
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 15px; margin-top: 8px; }
+  .data-table th { text-align: left; padding: 10px 14px; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 10px 14px; border-bottom: 1px solid rgba(31,45,69,0.5); color: var(--muted2); }
+  .data-table td:first-child { color: var(--text); font-weight: 500; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+  /* HEADLINES */
+  .headline-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .headline-card {
+    background: linear-gradient(135deg, var(--card2), var(--card));
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .headline-card .h-icon  { font-size: 26px; margin-bottom: 12px; display: block; }
+  .headline-card .h-value { font-size: 38px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin-bottom: 8px; }
+  .headline-card .h-value span { font-size: 22px; font-weight: 700; letter-spacing: -1px; }
+  .headline-card .h-label   { font-size: 14px; color: var(--muted2); font-weight: 500; line-height: 1.4; }
+  .headline-card .h-context { font-size: 15px; color: var(--muted); margin-top: 6px; }
+  .headline-card.accent-indigo { border-top: 2px solid var(--indigo); }
+  .headline-card.accent-green  { border-top: 2px solid var(--green); }
+  .headline-card.accent-amber  { border-top: 2px solid var(--amber); }
+  .headline-card.accent-blue   { border-top: 2px solid var(--blue); }
+  .headline-card.accent-purple { border-top: 2px solid var(--purple); }
+  /* NARRATIVE */
+  .narrative-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .narrative-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+  .narrative-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .narrative-card p  { font-size: 15px; color: var(--muted2); line-height: 1.65; }
+  /* PROGRESS */
+  .progress-item { margin-bottom: 14px; }
+  .progress-item .p-header { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 15px; }
+  .progress-item .p-name { font-weight: 500; }
+  .progress-item .p-val  { color: var(--muted2); }
+  .progress-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill  { height: 100%; border-radius: 3px; }
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 20px; }
+  .timeline-item::before { content: ''; position: absolute; left: -24px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent, var(--indigo)); border: 2px solid var(--bg); }
+  .timeline-item .t-label { font-size: 15px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 3px; }
+  .timeline-item .t-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item .t-body  { font-size: 15px; color: var(--muted2); line-height: 1.6; }
+  /* FEATURE CARDS */
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+  .feature-card .f-icon { width: 48px; height: 48px; background: var(--card2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+  .feature-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .feature-card p  { font-size: 15px; color: var(--muted2); line-height: 1.65; }
+  .feature-card .f-tags { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 15px; padding: 3px 9px; border-radius: 20px; font-weight: 500; background: var(--card2); color: var(--muted2); border: 1px solid var(--border); }
+  /* BBBB */
+  .bbbb-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .bbbb-year-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .bbbb-year-card.highlight { border-color: var(--indigo); background: rgba(99,102,241,0.05); }
+  .bbbb-year-card .year-tag { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 16px; }
+  .bbbb-year-card .year-tag.active { color: var(--indigo); }
+  .bbbb-year-card .y-stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .bbbb-year-card .y-stat:last-child { border-bottom: none; }
+  .bbbb-year-card .y-key { font-size: 15px; color: var(--muted2); }
+  .bbbb-year-card .y-val { font-size: 15px; font-weight: 600; }
+  /* PIPELINE */
+  .pipeline-stages { display: flex; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .pipeline-stage { flex: 1; padding: 18px 14px; text-align: center; border-right: 1px solid var(--border); }
+  .pipeline-stage:last-child { border-right: none; }
+  .pipeline-stage .ps-num   { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+  .pipeline-stage .ps-label { font-size: 15px; color: var(--muted); }
+  .pipeline-stage.active { background: rgba(99,102,241,0.08); }
+  .pipeline-stage.active .ps-num { color: var(--indigo); }
+  /* SESSION BARS */
+  .session-attendance { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .session-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .session-bar .m-label { font-size: 15px; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+  .session-bar .m-num   { font-size: 28px; font-weight: 800; color: var(--indigo); }
+  .session-bar .m-of    { font-size: 15px; color: var(--muted); }
+  /* COMPANY BARS */
+  .company-bar-item { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .company-bar-item .c-name  { width: 130px; font-size: 15px; font-weight: 500; flex-shrink: 0; }
+  .company-bar-item .c-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .company-bar-item .c-fill  { height: 100%; border-radius: 4px; background: var(--indigo); }
+  .company-bar-item .c-count { width: 30px; text-align: right; font-size: 15px; color: var(--muted2); }
+  /* NL GRID */
+  .nl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  /* PILLS */
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 14px; font-weight: 600; }
+  .pill-green  { background: rgba(16,185,129,0.1);  color: var(--green);  border: 1px solid rgba(16,185,129,0.2); }
+  .pill-amber  { background: rgba(245,158,11,0.1);  color: var(--amber);  border: 1px solid rgba(245,158,11,0.2); }
+  /* CALLOUTS */
+  .callout { border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; font-size: 15px; line-height: 1.65; }
+  .callout-blue   { background: rgba(59,130,246,0.08);  border-left: 3px solid var(--blue); }
+  .callout-amber  { background: rgba(245,158,11,0.08);  border-left: 3px solid var(--amber); }
+  .callout-green  { background: rgba(16,185,129,0.08);  border-left: 3px solid var(--green); }
+  .callout-indigo { background: rgba(99,102,241,0.08);  border-left: 3px solid var(--indigo); }
+  .callout strong { color: var(--text); }
+  /* EVENTS */
+  .event-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-bottom: 1px solid rgba(31,45,69,0.5); }
+  .event-row:last-child { border-bottom: none; }
+  .event-date   { font-size: 15px; color: var(--muted); width: 55px; flex-shrink: 0; font-weight: 600; }
+  .event-name   { flex: 1; font-size: 15px; font-weight: 500; }
+  .event-guests { font-size: 15px; font-weight: 600; color: var(--muted2); }
+  /* TOP POSTS */
+  .top-post { background: var(--card2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .top-post .tp-text     { flex: 1; font-size: 15px; color: var(--muted2); line-height: 1.5; }
+  .top-post .tp-stats    { flex-shrink: 0; text-align: right; }
+  .top-post .tp-metric   { font-size: 16px; font-weight: 700; }
+  .top-post .tp-sublabel { font-size: 15px; color: var(--muted); }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+</style>
+</head>
+<body>
+<!-- ═══ SIDEBAR ═══ -->
+<nav>
+  <div class="nav-logo">
+    <h1>Founders Founders</h1>
+    <p>Board Review · Jan–May 2026</p>
+  </div>
+  <a href="#headlines" class="active"><span class="nav-icon">⚡</span> Headlines</a>
+  <a href="#eventos"><span class="nav-icon">📅</span> Event Strategy</a>
+  <a href="#residentes"><span class="nav-icon">🏠</span> Resident Community</a>
+  <a href="#bbbb"><span class="nav-icon">🚀</span> BBBB 2026</a>
+  <a href="#social"><span class="nav-icon">📱</span> Social Media</a>
+  <div class="nav-footer">May 12, 2026</div>
+</nav>
+<!-- ═══ MAIN ═══ -->
+<main>
+<section id="headlines">
+  <div class="section-header">
+    <span class="section-icon">⚡</span>
+    <h2>Jan–May 2026 at a Glance</h2>
+  </div>
+  <div class="headline-grid">
+    <div class="headline-card accent-indigo">
+      <span class="h-icon">📅</span>
+      <div class="h-value">30</div>
+      <div class="h-label">events delivered in 5 months</div>
+      <div class="h-context">3 distinct audiences: residents, community, F2 Club</div>
+    </div>
+    <div class="headline-card accent-green">
+      <span class="h-icon">📧</span>
+      <div class="h-value">36<span>%</span></div>
+      <div class="h-label">average newsletter open rate</div>
+      <div class="h-context">vs. industry benchmark of 29%</div>
+    </div>
+    <div class="headline-card accent-amber">
+      <span class="h-icon">🎯</span>
+      <div class="h-value">6<span>/44</span></div>
+      <div class="h-label">BBBB leads converted</div>
+      <div class="h-context">Right product · recruitment funnel is the bottleneck</div>
+    </div>
+    <div class="headline-card accent-blue">
+      <span class="h-icon">🏆</span>
+      <div class="h-value">35</div>
+      <div class="h-label">BBBB 2026 participants · 6 companies</div>
+      <div class="h-context">avg 5.8 people per company (vs. 3.5 in 2025)</div>
+    </div>
+    <div class="headline-card accent-purple">
+      <span class="h-icon">🏠</span>
+      <div class="h-value">1<span>,194</span></div>
+      <div class="h-label">Luma audience members</div>
+      <div class="h-context">470 active Mailchimp subscribers</div>
+    </div>
+  </div>
+</section>
+<section id="eventos">
+  <div class="section-header">
+    <span class="section-icon">📅</span>
+    <h2>Event Strategy — Scale-Up Seasons</h2>
+  </div>
+  <p class="section-subtitle">In 2026, F2 operates a coherent event strategy across 3 defined audiences, each with its own roadmap, format, and consistent identity.</p>
+  <div class="chart-row-3">
+    <div class="feature-card">
+      <div class="f-icon">🏠</div>
+      <h4>Residents</h4>
+      <p>The internal community of founders and teams based at F2. Dedicated programmes: Resident Olympics, Wellness Wednesdays, F2 Hub. Focused on belonging and day-to-day experience.</p>
+      <div class="f-tags"><span class="tag">Olympics</span><span class="tag">Wellness Wednesdays</span><span class="tag">The Tea On</span><span class="tag">MasterBuilds</span></div>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🌐</div>
+      <h4>External Community</h4>
+      <p>Founders and scale-up teams from the broader ecosystem. The Tea On, BBBB, MasterBuild and PTH Express events. Focused on knowledge transfer and ecosystem-building.</p>
+      <div class="f-tags"><span class="tag">The Tea On</span><span class="tag">MasterBuild</span><span class="tag">BBBB</span></div>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🎾</div>
+      <h4>F2 Club</h4>
+      <p>Invite-only community of later-stage founders. Intimate events with high trust and informal format — focused on peer learning and depth of conversation.</p>
+      <div class="f-tags"><span class="tag">Founders Dinner</span><span class="tag">From Startup to Sold</span><span class="tag">Scale Me Up Lunches</span></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Scale-Up Seasons 2026 — Roadmap</h3>
+    <div class="chart-subtitle">Four quarterly seasons · each anchored by 3 Tea On events + 1 paid MasterBuild workshop</div>
+    <div class="callout callout-indigo" style="margin-bottom:20px;">
+      <strong>Strategic rationale:</strong> Scale-Up Seasons serve two goals simultaneously. First, they clarify F2's positioning in the ecosystem — this is a community for scale-ups, not early-stage startups. Second, they act as a sales funnel: The Tea On events introduce founders to F2's thinking and community, creating a natural path into the paid quarterly MasterBuild workshops.
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:8px;">
+      <div style="background:var(--card2); border-radius:10px; padding:20px; border-left:3px solid var(--green);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--green); margin-bottom:8px;">Q1 — People Season ✅ Completed</div>
+        <div style="font-size:16px; font-weight:700; margin-bottom:8px;">People Season</div>
+        <p style="font-size:13px; color:var(--muted2); line-height:1.65;">Focused on leadership, culture and team management. MasterBuild with Sofia Matos (People Journey), plus three Tea On events covering female leadership, team alignment, and hiring for scale.</p>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag">The Tea On ×3</span><span class="tag">MasterBuild</span>
+        </div>
+      </div>
+      <div style="background:var(--card2); border-radius:10px; padding:20px; border-left:3px solid var(--blue);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--blue); margin-bottom:8px;">Q2 — Product Season 🔄 Ongoing</div>
+        <div style="font-size:16px; font-weight:700; margin-bottom:8px;">Product Season</div>
+        <p style="font-size:13px; color:var(--muted2); line-height:1.65;">Focused on product, AI and GTM. The Tea On events covering AI-first products, pivoting and product strategy, with a MasterBuild anchoring the quarter as a paid deep-dive workshop.</p>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag">The Tea On ×3</span><span class="tag">MasterBuild</span>
+        </div>
+      </div>
+      <div style="background:var(--card2); border-radius:10px; padding:20px; border-left:3px solid var(--amber);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--amber); margin-bottom:8px;">Q3 — Revenue Season 📋 Upcoming</div>
+        <div style="font-size:16px; font-weight:700; margin-bottom:8px;">Revenue Season</div>
+        <p style="font-size:13px; color:var(--muted2); line-height:1.65;">Focused on pricing, sales strategy, and revenue growth for scale-ups. Three Tea On events anchored by one MasterBuild workshop covering revenue fundamentals for later-stage companies.</p>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag">The Tea On ×3</span><span class="tag">MasterBuild</span>
+        </div>
+      </div>
+      <div style="background:var(--card2); border-radius:10px; padding:20px; border-left:3px solid var(--purple);">
+        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--purple); margin-bottom:8px;">Q4 — Markets Season 📋 Upcoming</div>
+        <div style="font-size:16px; font-weight:700; margin-bottom:8px;">Markets Season</div>
+        <p style="font-size:13px; color:var(--muted2); line-height:1.65;">Focused on international expansion, market positioning, and go-to-market for new geographies. Three Tea On events plus a MasterBuild workshop closing the year on market strategy.</p>
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag">The Tea On ×3</span><span class="tag">MasterBuild</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>Registrations by Event Category (Jan–May 2026)</h3>
+      <div class="chart-subtitle">30 events · 354 total registrations</div>
+      <canvas id="eventChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Audience Snapshot — May 2026</h3>
+      <div class="chart-subtitle">Current size across all digital channels</div>
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:4px;">
+        <div class="stat-card" style="--accent:var(--purple);">
+          <div class="label">Luma — Total Members</div>
+          <div class="value">1,194</div>
+          <div class="sublabel">537 at launch (Nov 2024, migration) · +657 organic members since · steady month-on-month growth</div>
+        </div>
+        <div class="stat-card" style="--accent:var(--amber);">
+          <div class="label">Mailchimp — Active Subscribers</div>
+          <div class="value">470</div>
+          <div class="sublabel">~1,100 total ever · database cleaned in Oct 2025 reactivation campaign (removed inactive/dead emails) · quality over quantity</div>
+        </div>
+        <div class="stat-card" style="--accent:#0A66C2;">
+          <div class="label">LinkedIn — Total Followers</div>
+          <div class="value">3,271</div>
+          <div class="sublabel">+366 new followers Jan–May 2026 · +230 in H2 2025 · consistent organic growth</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="border-bottom:1px solid var(--border); margin:8px 0 24px; padding-bottom:12px;">
+    <span style="font-size:15px; font-weight:600; color:var(--muted2);">Audience Growth Over Time</span>
+  </div>
+  <div class="chart-card">
+    <h3>Luma — Cumulative Member Growth</h3>
+    <div class="chart-subtitle">Nov 2024 – May 2026 · Bars = new members/month · Line = cumulative total</div>
+    <canvas id="lumaGrowthChart" style="max-height:260px;"></canvas>
+    <div class="callout callout-blue" style="margin-top:16px; margin-bottom:0;">
+      <strong>Nov 2024:</strong> Luma was adopted as F2's events platform — the 537 initial members reflect a migration from the previous system. All growth since Jan 2025 is organic. The Nov 2025 spike (83 new) coincides with São Martinho (75 attendees) and F2's 8th anniversary event driving new registrations.
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>LinkedIn — New Followers per Month</h3>
+      <div class="chart-subtitle">Aug 2025 – May 2026 · Earliest data available</div>
+      <canvas id="lkGrowthChart" style="max-height:210px;"></canvas>
+      <div class="callout callout-green" style="margin-top:16px; margin-bottom:0;">
+        <strong>Jan 2026</strong> was the strongest month (104 new followers) — the Resident Olympics post alone generated 2,659 impressions, F2's highest-performing LinkedIn post of the period. Growth has stayed consistently above 70/month from Jan–Apr 2026.
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>Mailchimp — 2026 List Movement</h3>
+      <div class="chart-subtitle">Jan–May 2026 · Additions vs. removals (unsubscribes + bounces)</div>
+      <canvas id="mcGrowthChart" style="max-height:210px;"></canvas>
+      <div class="callout callout-amber" style="margin-top:16px; margin-bottom:0;">
+        <strong>Context:</strong> Growing the list is not the goal — maintaining a healthy, engaged list is. In Oct 2025, a reactivation campaign confirmed 204 active subscribers and removed those who didn't re-engage. In 2026, 28 new contacts joined while 37 left (27 unsubscribed + 10 hard bounces cleaned). The 470 active subscribers are opted-in and intentional.
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>General &amp; Programme Newsletters — Open Rates</h3>
+    <div class="chart-subtitle">Chronological order · ~440–1,001 recipients per send · Industry benchmark: 29%</div>
+    <canvas id="newsletterChartGeneral" style="max-height:240px;"></canvas>
+  </div>
+  <div class="callout callout-green" style="margin-top:4px;">
+    <strong>Takeaway:</strong> General newsletters are consistently above the industry benchmark of 29% — the BBBB campaign sequence (Price Tiers → Early Bird → Applications Close) averaged 38.7% across ~450 recipients. The May newsletter dipped to 19.7%, which was the first send after the list was consolidated from ~1,100 to ~475 qualified contacts — a one-off effect of the database cleanup.
+  </div>
+</section>
+<section id="residentes">
+  <div class="section-header">
+    <span class="section-icon">🏠</span>
+    <h2>Resident Community</h2>
+  </div>
+  <p class="section-subtitle">Three concrete initiatives that improved the day-to-day experience and sense of community among F2 residents in 2026.</p>
+  <div class="chart-card">
+    <h3>A) Resident Olympics — New Community Initiative 🏆</h3>
+    <div class="chart-subtitle">4 events · Jan–Apr 2026 · 77 total registrations</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div>
+        <div style="margin-bottom:16px;">
+          <div class="event-row"><span class="event-date">Jan 29</span><span class="event-name">🎾 Padel</span><span class="event-guests">20 people</span></div>
+          <div class="event-row"><span class="event-date">Feb 26</span><span class="event-name">🏓 Ping-Pong</span><span class="event-guests">13 people</span></div>
+          <div class="event-row"><span class="event-date">Mar 26</span><span class="event-name">🧠 Quiz Game</span><span class="event-guests">29 people</span></div>
+          <div class="event-row"><span class="event-date">Apr 25</span><span class="event-name">🔫 Airsoft</span><span class="event-guests">15 people</span></div>
+        </div>
+        <div style="display:flex; gap:12px;">
+          <div class="stat-card" style="flex:1; padding:14px; --accent:var(--purple);">
+            <div class="label">Total</div><div class="value" style="font-size:24px;">77</div><div class="sublabel">registrations</div>
+          </div>
+          <div class="stat-card" style="flex:1; padding:14px; --accent:var(--green);">
+            <div class="label">Avg</div><div class="value" style="font-size:24px;">19</div><div class="sublabel">per event</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; justify-content:center;">
+        <canvas id="olympicsChart" style="max-height:180px;"></canvas>
+        <div class="callout callout-green" style="margin-top:16px; margin-bottom:0;">
+          <strong>Highlight:</strong> The Quiz Game was so well received that residents are now organising it autonomously — the clearest possible signal of a genuinely active community.
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>B) F2 Hub — Online Hub for Residents 🔗</h3>
+    <div class="chart-subtitle"><a href="https://hub.founders-founders.com/" style="color:var(--indigo); text-decoration:none;">hub.founders-founders.com</a> · Built in 1 month by 2 internal developers</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div>
+        <p style="font-size:13px; color:var(--muted2); line-height:1.7; margin-bottom:16px;">The F2 Hub answers one question: <strong style="color:var(--text);">"What do I need to do or check today?"</strong> — with a clear information hierarchy and immediate access to everything a resident needs in their daily routine.</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card2); border-radius:8px; font-size:13px;"><span>🏳️</span><span style="color:var(--muted2);">Daily attendance flags</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card2); border-radius:8px; font-size:13px;"><span>🍽️</span><span style="color:var(--muted2);">Lunch ordering — integrated</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card2); border-radius:8px; font-size:13px;"><span>🚗</span><span style="color:var(--muted2);">Meeting room and parking booking</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card2); border-radius:8px; font-size:13px;"><span>💬</span><span style="color:var(--muted2);">Slack channel · Rules · Luma events</span></div>
+          <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card2); border-radius:8px; font-size:13px;"><span>🔐</span><span style="color:var(--muted2);">Slack login — resident data protected</span></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; justify-content:flex-start;">
+        <div class="callout callout-blue" style="margin-bottom:0;">
+          <strong>Development process:</strong> The structure, design and colour palette were mocked up in Claude Code before development started — significantly accelerating the process and aligning expectations before a single line of code was written.
+        </div>
+        <div class="callout callout-green" style="margin-bottom:0;">
+          <strong>Result:</strong> Fully built in 1 month by 2 internal developers. A functional product that centralises the resident's daily experience — and can evolve as the community grows.
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+          <span class="tag">Slack Login</span><span class="tag">Built in-house</span><span class="tag">1 month</span><span class="tag">2 devs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>C) New Lunch Process — Tally + Slack Automation 🍽️</h3>
+    <div class="chart-subtitle">Replacing the Google Form with a better experience and zero manual work</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+      <div>
+        <div class="timeline" style="--accent:var(--amber);">
+          <div class="timeline-item">
+            <div class="t-label">Before</div>
+            <div class="t-title">Manual Google Form</div>
+            <div class="t-body">Basic submission process with no automation. The team compiled orders manually and forwarded them to the cafeteria each day.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="t-label">Now</div>
+            <div class="t-title">Tally Form + Slack Automation</div>
+            <div class="t-body">A Tally form with improved UX, integrated with a Slack automation: every day at 9am, the system aggregates that day's orders and sends them automatically to the cafeteria team's channel.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="t-label">Validation</div>
+            <div class="t-title">Tested with residents before launch</div>
+            <div class="t-body">The process was tested with residents before going live. Feedback was positive — the new UX is faster and clearer than the previous form.</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; justify-content:center;">
+        <div style="background:var(--card2); border-radius:10px; padding:20px; border:1px solid var(--border);">
+          <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--amber); margin-bottom:8px;">Daily automation</div>
+          <div style="font-size:15px; font-weight:600; margin-bottom:6px;">⏰ Every day at 9:00am</div>
+          <p style="font-size:13px; color:var(--muted2);">Slack automatically sends the compiled orders to the cafeteria — with zero manual intervention from the F2 team.</p>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="tag">Tally Form</span><span class="tag">Slack Automation</span><span class="tag">Daily 9am</span><span class="tag">Zero manual work</span>
+        </div>
+        <a href="https://tally.so/r/PdvDPe" style="font-size:12px; color:var(--indigo); text-decoration:none;">↗ View form at tally.so/r/PdvDPe</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="bbbb">
+  <div class="section-header">
+    <span class="section-icon">🚀</span>
+    <h2>BBBB 2026 — Analysis &amp; Learnings</h2>
+  </div>
+  <p class="section-subtitle">An honest read of the numbers — with context on what's working, what the challenge is, and what we're taking into the next edition.</p>
+  <div class="bbbb-compare">
+    <div class="bbbb-year-card">
+      <div class="year-tag">BBBB 2025</div>
+      <div class="y-stat"><span class="y-key">Participating companies</span><span class="y-val">15</span></div>
+      <div class="y-stat"><span class="y-key">Unique participants</span><span class="y-val">53</span></div>
+      <div class="y-stat"><span class="y-key">Avg people per company</span><span class="y-val">3.5</span></div>
+      <div class="y-stat"><span class="y-key">Dominant profile</span><span class="y-val">Founder solo</span></div>
+      <div class="y-stat"><span class="y-key">Programme duration</span><span class="y-val">May–July 2025</span></div>
+    </div>
+    <div class="bbbb-year-card highlight">
+      <div class="year-tag active">BBBB 2026 — CURRENT</div>
+      <div class="y-stat"><span class="y-key">Participating companies</span><span class="y-val">6</span></div>
+      <div class="y-stat"><span class="y-key">Unique participants</span><span class="y-val">35</span></div>
+      <div class="y-stat"><span class="y-key">Avg people per company</span><span class="y-val" style="color:var(--green);">5.8 ↑</span></div>
+      <div class="y-stat"><span class="y-key">Dominant profile</span><span class="y-val" style="color:var(--green);">Full teams</span></div>
+      <div class="y-stat"><span class="y-key">Programme duration</span><span class="y-val">April–July 2026</span></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Participants by Company — BBBB 2026</h3>
+    <div class="chart-subtitle">Companies are participating with entire teams, not just the founder</div>
+    <div style="margin-top:12px;">
+      <div class="company-bar-item"><span class="c-name">Jumpseller</span><div class="c-track"><div class="c-fill" style="width:100%;"></div></div><span class="c-count">14</span></div>
+      <div class="company-bar-item"><span class="c-name">Ethiack</span><div class="c-track"><div class="c-fill" style="width:57%;"></div></div><span class="c-count">8</span></div>
+      <div class="company-bar-item"><span class="c-name">Savearth</span><div class="c-track"><div class="c-fill" style="width:29%;"></div></div><span class="c-count">4</span></div>
+      <div class="company-bar-item"><span class="c-name">Codepoint</span><div class="c-track"><div class="c-fill" style="width:21%;"></div></div><span class="c-count">3</span></div>
+      <div class="company-bar-item"><span class="c-name">Kevel</span><div class="c-track"><div class="c-fill" style="width:21%;"></div></div><span class="c-count">3</span></div>
+      <div class="company-bar-item"><span class="c-name">LabOrders</span><div class="c-track"><div class="c-fill" style="width:14%;"></div></div><span class="c-count">2</span></div>
+      <div class="company-bar-item"><span class="c-name">Startup Portugal</span><div class="c-track"><div class="c-fill" style="width:7%;"></div></div><span class="c-count">1</span></div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Attendance per Module — BBBB 2026</h3>
+    <div class="chart-subtitle">Unique participants who attended at least one session of each module</div>
+    <div class="session-attendance">
+      <div class="session-bar"><div class="m-label">Module 1</div><div class="m-num">21</div><div class="m-of">participants</div></div>
+      <div class="session-bar"><div class="m-label">Module 2</div><div class="m-num">14</div><div class="m-of">participants</div></div>
+      <div class="session-bar"><div class="m-label">Module 3</div><div class="m-num">13</div><div class="m-of">participants</div></div>
+      <div class="session-bar"><div class="m-label">Module 4</div><div class="m-num">13</div><div class="m-of">participants</div></div>
+    </div>
+  </div>
+  <div class="narrative-grid">
+    <div class="narrative-card" style="border-left:3px solid var(--green);">
+      <h4>✅ What is working well</h4>
+      <p>The rooms are full — session attendance in 2026 is on par with 2025. Companies are sending whole teams (up to 14 people per company), creating richer group dynamics. The programme is cohesive, with high-quality speakers including Afonso Santos (Kevel), Inês de Macedo Santos (Armilar VC) and Tiago Craveiro (Maersk). Codepoint — a 2025 participant — signed up again in 2026. That's the clearest product-market signal possible.</p>
+    </div>
+    <div class="narrative-card" style="border-left:3px solid var(--amber);">
+      <h4>⚠️ Point to acknowledge: Board Dinners</h4>
+      <p>Board Dinners (reserved for founders and C-Level) are less attended this year, simply because there are fewer companies in the programme. With 6 companies vs 15, the dinner table is smaller by design. The format is valuable — the challenge is having sufficient volume of eligible companies to make it work at full energy.</p>
+    </div>
+    <div class="narrative-card" style="border-left:3px solid var(--red);">
+      <h4>🔴 The challenge: the recruitment funnel</h4>
+      <p>Of 44 leads captured, only 6 converted. Pipeline analysis shows most leads were early-stage and international startups — outside the programme's target (Portuguese, later-stage companies). This mismatch explains the low conversion rate. The strategic question for 2027: how do we qualify leads earlier and more precisely before they enter the funnel?</p>
+    </div>
+    <div class="narrative-card" style="border-left:3px solid var(--blue);">
+      <h4>🔵 Bottom line</h4>
+      <p>BBBB 2026 is <strong>stronger and more cohesive than the raw numbers suggest</strong>. The challenge is the recruitment funnel, not the quality of execution. The 2027 edition should start working the pipeline much earlier, with clearer fit criteria around stage, geography and business model.</p>
+    </div>
+  </div>
+  <div class="chart-card" style="margin-top:16px;">
+    <h3>BBBB 2026 Pipeline — F6S</h3>
+    <div class="chart-subtitle">44 total leads · 6 converted · The challenge is lead fit, not programme quality</div>
+    <div class="pipeline-stages">
+      <div class="pipeline-stage"><div class="ps-num">44</div><div class="ps-label">Total Leads</div></div>
+      <div class="pipeline-stage"><div class="ps-num" style="color:var(--red);">12</div><div class="ps-label">Rejected</div></div>
+      <div class="pipeline-stage"><div class="ps-num" style="color:var(--amber);">10</div><div class="ps-label">Fit Check</div></div>
+      <div class="pipeline-stage"><div class="ps-num" style="color:var(--blue);">7</div><div class="ps-label">In Progress</div></div>
+      <div class="pipeline-stage active"><div class="ps-num">6</div><div class="ps-label">Converted ✓</div></div>
+    </div>
+    <div class="callout callout-amber" style="margin-top:16px; margin-bottom:0;">
+      <strong>Pipeline context:</strong> The majority of leads came from Africa, the UK and the Middle East, and were early-stage startups — geographies and stages well outside the programme's target. This is the primary learning for 2027: tighter sourcing criteria upfront.
+    </div>
+  </div>
+  <div class="callout callout-green" style="margin-top:16px;">
+    <strong>🏗️ Product achievement:</strong> The BBBB 2026 landing page (<strong>founders-founders.com/scaleup-program</strong>) was designed and developed in just <strong>2 weeks</strong> with a new design and development team. The process helped identify the right suppliers for future projects — an internal workflow now established.
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-header" style="margin-bottom:20px; border-bottom:none; padding-bottom:0;">
+    <span class="section-icon">💬</span>
+    <h2 style="font-size:18px;">Klatchpoint — BBBB Communications</h2>
+  </div>
+  <p class="section-subtitle" style="margin-top:0;">All BBBB programme communications run through Klatchpoint — built by BBBB alumni — replacing scattered emails with a single automated system.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="f-icon">📧</div>
+      <h4>Unified Communications</h4>
+      <p>Emails and push notifications centralised in one platform. Participants receive all programme communications in a single channel — no more scattered inboxes or missed threads.</p>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">📝</div>
+      <h4>Slides &amp; Session Summaries with Notion AI</h4>
+      <p>After each session, slides are shared and an AI-generated summary is produced via Notion AI — accessible to all participants immediately after the session ends.</p>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">📸</div>
+      <h4>Photos Ready to Download</h4>
+      <p>Session photos are available for instant download through the platform — no manual sharing via email or WeTransfer required.</p>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">📅</div>
+      <h4>Automatic Google Calendar Invites</h4>
+      <p>Calendar invites for each session are sent automatically by the app — eliminating the manual process and ensuring every participant has events in their calendar from day one.</p>
+    </div>
+    <div class="feature-card">
+      <div class="f-icon">🎓</div>
+      <h4>Automatic Certificates</h4>
+      <p>Completion certificates are generated automatically at the end of the programme — personalised per participant and sent without any manual effort from the F2 team.</p>
+    </div>
+    <div class="feature-card" style="border-left:3px solid var(--green);">
+      <div class="f-icon">🔗</div>
+      <h4>Built by BBBB Alumni</h4>
+      <p>Klatchpoint was built by former BBBB participants — a concrete example of the programme creating value that flows back into the community. F2 is simultaneously customer and proof of concept.</p>
+      <div class="f-tags"><span class="tag" style="color:var(--green); border-color:rgba(16,185,129,0.3);">Alumni Product</span></div>
+    </div>
+  </div>
+  <div class="callout callout-blue" style="margin-top:8px;">
+    <strong>Operational impact:</strong> Adopting Klatchpoint significantly reduced the administrative overhead of running the programme — fewer manual emails, fewer calendar follow-ups, less photo management. Time recovered was reinvested into content quality and speaker curation.
+  </div>
+
+</section>
+<section id="social">
+  <div class="section-header">
+    <span class="section-icon">📱</span>
+    <h2>Social Media</h2>
+  </div>
+  <p class="section-subtitle">Performance comparison across platforms: Jan–May 2025 vs Jan–May 2026.</p>
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:24px;">
+    <div class="stat-card" style="--accent:#E1306C;">
+      <div class="label">Instagram — Posts 2026</div>
+      <div class="value">63</div>
+      <div class="sublabel">vs. 28 posts in 2025 · +125% volume</div>
+      <span class="badge badge-blue">Total reach: 10,394</span>
+    </div>
+    <div class="stat-card" style="--accent:#0A66C2;">
+      <div class="label">LinkedIn — Impressions 2026</div>
+      <div class="value">38<span style="font-size:20px;font-weight:600">K</span></div>
+      <div class="sublabel">64 posts · avg 606 impressions/post</div>
+      <span class="badge badge-green">+366 followers this period</span>
+    </div>
+    <div class="stat-card" style="--accent:#1877F2;">
+      <div class="label">Facebook — Posts 2026</div>
+      <div class="value">57</div>
+      <div class="sublabel">vs. 27 posts in 2025 · Avg reach: 58</div>
+      <span class="badge badge-amber">Controlled decline</span>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>Instagram — Top 10 Posts by Reach</h3>
+      <div class="chart-subtitle">Jan–May 2026</div>
+      <canvas id="igReachChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>LinkedIn — New Followers by Month</h3>
+      <div class="chart-subtitle">Jan–May 2026 · 366 total new followers</div>
+      <canvas id="lkFollowersChart"></canvas>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>🏆 Top LinkedIn Posts — by Impressions</h3>
+      <div class="chart-subtitle">Jan–May 2026</div>
+      <div class="top-post">
+        <div class="tp-text">We turned our startup community into a championship 🏆 — F2 Resident Olympics kicks off 2026 with padel, ping-pong, quiz and airsoft</div>
+        <div class="tp-stats"><div class="tp-metric">2,659</div><div class="tp-sublabel">impressions · 35 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">BBBB: Afonso Santos (Kevel) walks the cohort through his journey — from $180 contracts to $1M+ deals with Continente, NOS, El Corte Inglés and PayPal</div>
+        <div class="tp-stats"><div class="tp-metric">2,042</div><div class="tp-sublabel">impressions · 56 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">BBBB Week 1: Tiago Craveiro and Guilherme Pacheco (A.P. Møller – Maersk) on scaling playbooks for later-stage startups</div>
+        <div class="tp-stats"><div class="tp-metric">1,642</div><div class="tp-sublabel">impressions · 38 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">International Women's Day — on structural change vs. one-week celebrations, and what it takes to shift company culture</div>
+        <div class="tp-stats"><div class="tp-metric">1,587</div><div class="tp-sublabel">impressions · 49 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">BBBB: Inês de Macedo Santos (Armilar VC) joins the programme to run a session on Runway &amp; Fundraising Strategy</div>
+        <div class="tp-stats"><div class="tp-metric">1,514</div><div class="tp-sublabel">impressions · 58 likes</div></div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <h3>🏆 Top Instagram Posts — by Reach</h3>
+      <div class="chart-subtitle">Jan–May 2026</div>
+      <div class="top-post">
+        <div class="tp-text">"The best review? Signing up again" — Codepoint testimonial on returning to Big Bang Bada Boom for a second year</div>
+        <div class="tp-stats"><div class="tp-metric">763</div><div class="tp-sublabel">reach · 39 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">Inside the Ecosystem Design Sprint — 25 people, 4 hours, 5 clear moves to build scale-up muscle in Porto</div>
+        <div class="tp-stats"><div class="tp-metric">500</div><div class="tp-sublabel">reach · 12 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">Scale-up playbooks from the best in the game: Coverflex, Maersk, Knokcare, Kevel, sheerME — BBBB 2026 speaker lineup</div>
+        <div class="tp-stats"><div class="tp-metric">393</div><div class="tp-sublabel">reach · 16 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">Step inside F2 — Porto's home for late-stage startups: 17 in the building, a network of 100+ behind them</div>
+        <div class="tp-stats"><div class="tp-metric">380</div><div class="tp-sublabel">reach · 14 likes</div></div>
+      </div>
+      <div class="top-post">
+        <div class="tp-text">Porto's tech ecosystem is moving — PTH Express: Shaping Porto's Tomorrow (23 April, with Porto Tech Hub)</div>
+        <div class="tp-stats"><div class="tp-metric">369</div><div class="tp-sublabel">reach · 11 likes</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="callout callout-amber" style="margin-top:4px;">
+    <strong>Instagram context:</strong> Post volume more than doubled in 2026 (63 vs 28), which diluted average reach per post (168 vs 361). However, total reach remained stable (10,394 vs 10,097). The shift was intentional — from reach-optimised posts toward consistent programme coverage. LinkedIn remains the highest-impact channel for F2's target audience.
+  </div>
+</section>
+</main>
+<script>
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#1f2d45';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+new Chart(document.getElementById('eventChart'), {
+  type: 'bar',
+  data: {
+    labels: ['The Tea On', 'Resident Olympics', 'Other Events', 'Wellness Wed', 'Ecosystem Sprint', 'MasterBuild', 'F2 Club'],
+    datasets: [{ label: 'Registrations', data: [98, 77, 65, 41, 25, 9, 9], backgroundColor: ['#6366f1','#a855f7','#3b82f6','#10b981','#14b8a6','#f59e0b','#ec4899'], borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1f2d45' } } } }
+});
+
+new Chart(document.getElementById('newsletterChartGeneral'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan 6\nJanuary','Jan 28\nFebruary','Feb 11\nBBBB Price Tiers','Feb 18\nBBBB Early Bird 48h','Mar 3\nMarch','Mar 10\nMasterBuild #1','Mar 18\nBBBB Applications 48h','Apr 9\nProduct Season Launch','May 5\nMay'],
+    datasets: [
+      { label: 'Open Rate (%)', data: [32.4, 38.3, 39.9, 41.5, 39.1, 34.3, 34.6, 36.5, 19.7], backgroundColor: (ctx) => { const v = ctx.raw; if (v >= 35) return '#6366f1'; if (v >= 29) return '#3b82f6'; return '#f59e0b'; }, borderRadius: 5 },
+      { label: 'Industry Benchmark (29%)', data: Array(9).fill(29), type: 'line', borderColor: '#ef4444', borderDash: [4,3], borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 }
+    ]
+  },
+  options: {
+    plugins: { legend: { display: true, position: 'bottom', labels: { padding: 14, font: { size: 11 } } }, tooltip: { callbacks: { label: (ctx) => { if (ctx.dataset.label === 'Open Rate (%)') { const recips = [1001,482,457,454,471,447,440,465,475]; return [`Open rate: ${ctx.raw}%`, `Recipients: ${recips[ctx.dataIndex].toLocaleString()}`]; } return ctx.dataset.label; } } } },
+    scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, font: { size: 10 } } }, y: { beginAtZero: true, max: 55, grid: { color: '#1f2d45' }, ticks: { callback: v => v + '%' } } }
+  }
+});
+
+
+new Chart(document.getElementById('igReachChart'), {
+  type: 'bar',
+  data: {
+    labels: ['BBBB Testimonial','EDS Recap','BBBB Speakers','F2 Intro','PTH Express','IWD Post','Scale-up Stats','F2 Anniversary','BBBB Week 1','Quiz Game'],
+    datasets: [{ label: 'Reach', data: [763, 500, 393, 380, 369, 312, 295, 281, 265, 243], backgroundColor: '#E1306C', borderRadius: 5 }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1f2d45' }, beginAtZero: true }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } } }
+});
+
+new Chart(document.getElementById('lkFollowersChart'), {
+  type: 'bar',
+  data: {
+    labels: ['January','February','March','April','May (partial)'],
+    datasets: [{ label: 'New Followers', data: [104, 74, 98, 74, 16], backgroundColor: '#0A66C2', borderRadius: 5 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#1f2d45' } } } }
+});
+
+
+new Chart(document.getElementById('olympicsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Padel 🎾','Ping-Pong 🏓','Quiz 🧠','Airsoft 🔫'],
+    datasets: [{ label: 'Registrations', data: [20, 13, 29, 15], backgroundColor: ['#6366f1','#a855f7','#10b981','#3b82f6'], borderRadius: 6 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, max: 35, grid: { color: '#1f2d45' } } } }
+});
+
+new Chart(document.getElementById('lumaGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Nov 24','Dec 24','Jan 25','Feb 25','Mar 25','Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26','May 26'],
+    datasets: [
+      { type: 'line', label: 'Cumulative Members', data: [537,559,563,581,627,658,697,731,762,815,876,910,993,1036,1104,1114,1137,1185,1194], borderColor: '#a855f7', backgroundColor: 'transparent', pointRadius: 3, pointBackgroundColor: '#a855f7', tension: 0.35, yAxisID: 'yCumul', order: 0 },
+      { type: 'bar', label: 'New Members', data: [537,22,4,18,46,31,39,34,31,53,61,34,83,43,68,10,23,48,9], backgroundColor: (ctx) => { const i = ctx.dataIndex; if (i === 0) return 'rgba(239,68,68,0.55)'; if (i === 12) return 'rgba(245,158,11,0.75)'; return 'rgba(99,102,241,0.65)'; }, borderRadius: 4, yAxisID: 'yNew', order: 1 }
+    ]
+  },
+  options: {
+    responsive: true, interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } }, tooltip: { callbacks: { afterBody: (items) => { const i = items[0]?.dataIndex; if (i === 0) return ['⚠ Platform migration — not organic']; if (i === 12) return ['↑ São Martinho + 8th anniversary events']; return []; } } } },
+    scales: { x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }, yNew: { position: 'left', beginAtZero: true, grid: { color: '#1f2d45' }, ticks: { color: '#6366f1', font: { size: 10 } }, title: { display: true, text: 'New / month', color: '#6366f1', font: { size: 10 } } }, yCumul: { position: 'right', beginAtZero: false, grid: { drawOnChartArea: false }, ticks: { color: '#a855f7', font: { size: 10 } }, title: { display: true, text: 'Cumulative', color: '#a855f7', font: { size: 10 } } } }
+  }
+});
+
+new Chart(document.getElementById('lkGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26','May 26'],
+    datasets: [{ label: 'New Followers', data: [4,52,63,55,56,104,74,98,74,16], backgroundColor: (ctx) => { const i = ctx.dataIndex; if (i === 5) return 'rgba(10,102,194,0.9)'; return 'rgba(10,102,194,0.5)'; }, borderRadius: 5 }]
+  },
+  options: {
+    responsive: true, plugins: { legend: { display: false }, tooltip: { callbacks: { afterBody: (items) => { if (items[0]?.dataIndex === 5) return ['↑ Best month — Resident Olympics post (2,659 impressions)']; if (items[0]?.dataIndex === 9) return ['⚠ May is partial (data to 10 May)']; return []; } } } },
+    scales: { x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }, y: { beginAtZero: true, grid: { color: '#1f2d45' }, ticks: { color: '#94a3b8', font: { size: 10 } } } }
+  }
+});
+
+new Chart(document.getElementById('mcGrowthChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan 26','Feb 26','Mar 26','Apr 26','May 26'],
+    datasets: [
+      { label: 'New subscribers', data: [5, 3, 3, 16, 1], backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 5, stack: 'flow' },
+      { label: 'Unsubscribed', data: [-1, -9, -7, -6, -4], backgroundColor: 'rgba(239,68,68,0.6)', borderRadius: 5, stack: 'flow' },
+      { label: 'Cleaned (bounced)', data: [-3, -4, 0, -1, -2], backgroundColor: 'rgba(245,158,11,0.55)', borderRadius: 5, stack: 'flow' }
+    ]
+  },
+  options: {
+    responsive: true, interaction: { mode: 'index', intersect: false },
+    plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } }, tooltip: { callbacks: { afterBody: (items) => { const i = items[0]?.dataIndex; const net = [1, -10, -4, 9, -5][i]; return [`Net: ${net > 0 ? '+' : ''}${net}`]; } } } },
+    scales: { x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } }, stacked: true }, y: { stacked: true, grid: { color: '#1f2d45' }, ticks: { color: '#94a3b8', font: { size: 10 } }, afterDataLimits: (axis) => { axis.min = -16; axis.max = 20; } } }
+  }
+});
+
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('nav a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body></html>
